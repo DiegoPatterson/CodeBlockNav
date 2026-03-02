@@ -25,6 +25,15 @@
   - Syncs in real-time as you edit files
   - Overview ruler indicators for easy navigation
 
+- ✅ Cross-File Navigation & Workspace View
+  - Two view modes: Editor Mode (single file) and Workspace Mode (all files)
+  - New command: `block-navigator.toggleWorkspaceMode`
+  - New command: `block-navigator.toggleEditorMode`
+  - Workspace view shows all files with blocks organized in hierarchical tree
+  - Click any block → opens that file and jumps to the line
+  - File path tracking throughout the system
+  - Perfect for larger projects with multiple files
+
 ## [0.0.1] - 2026-03-02
 
 ### Initial Setup
