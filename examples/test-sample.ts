@@ -148,7 +148,24 @@ export class ApiController {
   handleError(error: Error): Response {
     // SUBBLOCK2: Log Error
     console.error(error);
-
+      // SUBBLOCK3: BLOCK TEST 3
+        // SUBBLOCK4: BLOCK TEST 4
+          // SUBBLOCK5: BLOCK TEST 5
+            // SUBBLOCK6: BLOCK TEST 6
+              // SUBBLOCK7: BLOCK TEST 7
+                // SUBBLOCK8: BLOCK TEST 8
+                  // SUBBLOCK9: BLOCK TEST 9
+                    // SUBBLOCK10: BLOCK TEST 10
+                      // SUBBLOCK11: BLOCK TEST 11
+                        // SUBBLOCK12: BLOCK TEST 12
+                          // SUBBLOCK13: BLOCK TEST 13
+                            // SUBBLOCK14: BLOCK TEST 14
+                              // SUBBLOCK15: BLOCK TEST 15
+                                // SUBBLOCK16: BLOCK TEST 16
+                                  // SUBBLOCK17: BLOCK TEST 17
+                                    // SUBBLOCK18: BLOCK TEST 18
+                                      // SUBBLOCK19: BLOCK TEST 19
+                                        // SUBBLOCK20: BLOCK TEST 20
     // SUBBLOCK2: Format Error Response
     return this.formatResponse({
       error: error.message,

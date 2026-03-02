@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import { BlockTreeDataProvider, BlockTreeItem } from './treeProvider';
+import { BlockDecorator } from './blockDecorator';
 
 let blockMapProvider: BlockTreeDataProvider;
 let treeView: vscode.TreeView<BlockTreeItem>;
+let blockDecorator: BlockDecorator;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('CodeBlock Navigator is now active!');
+
+	// Initialize the decorator
+	blockDecorator = new BlockDecorator();
 
 	// Register the tree data provider and create tree view
 	blockMapProvider = new BlockTreeDataProvider();
@@ -103,13 +108,38 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Watch for file changes and refresh the tree
 	const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,tsx,jsx,py,java,cs}');
-	fileWatcher.onDidChange(() => blockMapProvider.refresh());
+	fileWatcher.onDidChange(() => {
+		blockMapProvider.refresh();
+		if (vscode.window.activeTextEditor) {
+			blockDecorator.updateDecorations(vscode.window.activeTextEditor);
+		}
+	});
 	fileWatcher.onDidCreate(() => blockMapProvider.refresh());
 	fileWatcher.onDidDelete(() => blockMapProvider.refresh());
+
+	// Update decorations when active editor changes
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		if (editor) {
+			blockDecorator.updateDecorations(editor);
+		}
+	});
+
+	// Update decorations when document content changes
+	vscode.workspace.onDidChangeTextDocument(e => {
+		if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+			blockDecorator.updateDecorations(vscode.window.activeTextEditor);
+		}
+	});
+
+	// Apply decorations to the current editor on startup
+	if (vscode.window.activeTextEditor) {
+		blockDecorator.updateDecorations(vscode.window.activeTextEditor);
+	}
 
 	context.subscriptions.push(fileWatcher);
 }
 
 export function deactivate() {
 	console.log('CodeBlock Navigator is now deactivated!');
+	blockDecorator.dispose();
 }
