@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BlockTreeDataProvider, BlockTreeItem, FileBlockNode } from './treeProvider';
 import { BlockDecorator } from './blockDecorator';
+import { BlockSymbolProvider } from './blockSymbolProvider';
 
 let blockMapProvider: BlockTreeDataProvider;
 let treeView: vscode.TreeView<BlockTreeItem | FileBlockNode>;
@@ -17,6 +18,27 @@ export function activate(context: vscode.ExtensionContext) {
 	treeView = vscode.window.createTreeView('block-map-view', {
 		treeDataProvider: blockMapProvider
 	}) as vscode.TreeView<BlockTreeItem | FileBlockNode>;
+
+	// Register the symbol provider for breadcrumb navigation
+	const blockSymbolProvider = new BlockSymbolProvider();
+	context.subscriptions.push(
+		vscode.languages.registerDocumentSymbolProvider(
+			[
+				// TypeScript/JavaScript
+				{ scheme: 'file', language: 'typescript' },
+				{ scheme: 'file', language: 'javascript' },
+				{ scheme: 'file', language: 'typescriptreact' },
+				{ scheme: 'file', language: 'javascriptreact' },
+				// Python
+				{ scheme: 'file', language: 'python' },
+				// Java
+				{ scheme: 'file', language: 'java' },
+				// C#
+				{ scheme: 'file', language: 'csharp' }
+			],
+			blockSymbolProvider
+		)
+	);
 
 	// Track which items are expanded by listening to expansion events
 	const expandedBlockIds = new Set<number>();
