@@ -12,15 +12,16 @@ export class BlockTreeItem extends vscode.TreeItem {
 		public readonly depth: number,
 		public readonly lineNumber: number,
 		collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly blockType: 'BLOCK' | 'SUBBLOCK'
+		public readonly blockType: 'BLOCK' | 'SUBBLOCK',
+		public readonly filePath?: string
 	) {
 		super(label, collapsibleState);
 
 		// Set up the click-to-jump command
 		this.command = {
-			command: 'block-navigator.revealLine',
-			title: 'Reveal Block',
-			arguments: [lineNumber]
+			command: 'block-navigator.openAndRevealLine',
+			title: 'Open and Reveal Block',
+			arguments: [filePath, lineNumber]
 		};
 
 		// Add tooltip showing line number
@@ -46,13 +47,30 @@ export class BlockTreeItem extends vscode.TreeItem {
 }
 
 /**
+ * Tree Item representing a file with blocks in workspace view
+ */
+export class FileBlockNode extends vscode.TreeItem {
+	constructor(
+		public readonly filePath: string,
+		public readonly relativeLabel: string,
+		public readonly blockCount: number
+	) {
+		super(relativeLabel, vscode.TreeItemCollapsibleState.Collapsed);
+		this.iconPath = new vscode.ThemeIcon('file-code');
+		this.tooltip = filePath;
+		this.description = `${blockCount} block${blockCount !== 1 ? 's' : ''}`;
+		this.contextValue = 'fileNode';
+	}
+}
+
+/**
  * Tree Data Provider for the Block Map View
  */
-export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeItem> {
-	private _onDidChangeTreeData: vscode.EventEmitter<BlockTreeItem | undefined | null | void> = 
-		new vscode.EventEmitter<BlockTreeItem | undefined | null | void>();
+export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeItem | FileBlockNode> {
+	private _onDidChangeTreeData: vscode.EventEmitter<BlockTreeItem | FileBlockNode | undefined | null | void> = 
+		new vscode.EventEmitter<BlockTreeItem | FileBlockNode | undefined | null | void>();
 	
-	readonly onDidChangeTreeData: vscode.Event<BlockTreeItem | undefined | null | void> = 
+	readonly onDidChangeTreeData: vscode.Event<BlockTreeItem | FileBlockNode | undefined | null | void> = 
 		this._onDidChangeTreeData.event;
 
 	private blocks: ParsedBlock[] = [];
@@ -60,6 +78,11 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 	private searchQuery: string = '';
 	private matchingBlockIds: Set<number> = new Set();
 	private expandedItems: Set<number> = new Set(); // Track which items are expanded
+	
+	// Workspace mode support
+	private workspaceMode: boolean = false;
+	private workspaceBlocks: Map<string, ParsedBlock[]> = new Map(); // filePath -> blocks
+	private fileNodes: Map<string, FileBlockNode> = new Map(); // filePath -> FileBlockNode
 
 	constructor() {
 		// Refresh when active editor changes
@@ -107,6 +130,30 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 	getAllVisibleTreeItems(): BlockTreeItem[] {
 		return Array.from(this.blockItems.values());
+	}
+
+	async setWorkspaceMode(enabled: boolean): Promise<void> {
+		this.workspaceMode = enabled;
+		if (enabled) {
+			await this.loadWorkspaceBlocks();
+		} else {
+			this.workspaceBlocks.clear();
+			this.fileNodes.clear();
+			this.loadBlocks(); // Go back to editor mode
+		}
+		this.refresh();
+	}
+
+	private async loadWorkspaceBlocks(): Promise<void> {
+		const { WorkspaceBlockScanner } = await import('./workspaceBlockScanner');
+		this.workspaceBlocks = await WorkspaceBlockScanner.scanWorkspace();
+		
+		// Create file nodes
+		this.fileNodes.clear();
+		for (const [filePath, blocks] of this.workspaceBlocks) {
+			const relativeLabel = WorkspaceBlockScanner.getRelativePath(filePath);
+			this.fileNodes.set(filePath, new FileBlockNode(filePath, relativeLabel, blocks.length));
+		}
 	}
 
 	private updateMatchingBlocks(): void {
@@ -165,7 +212,8 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 		const document = editor.document;
 		const text = document.getText();
-		this.blocks = BlockParser.parse(text);
+		const filePath = document.uri.fsPath;
+		this.blocks = BlockParser.parse(text, filePath);
 		this.blockItems.clear();
 		this.updateMatchingBlocks();
 
@@ -186,7 +234,8 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 				block.depth,
 				block.lineNumber,
 				collapsibleState,
-				block.blockType
+				block.blockType,
+				filePath
 			);
 
 			// Add search indicator
@@ -202,11 +251,66 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		return this.blocks.some(b => b.parentId === block.id && this.shouldShowBlock(b.id));
 	}
 
-	getTreeItem(element: BlockTreeItem): vscode.TreeItem {
+	getTreeItem(element: BlockTreeItem | FileBlockNode): vscode.TreeItem {
 		return element;
 	}
 
-	getChildren(element?: BlockTreeItem): vscode.ProviderResult<BlockTreeItem[]> {
+	getChildren(element?: BlockTreeItem | FileBlockNode): vscode.ProviderResult<(BlockTreeItem | FileBlockNode)[]> {
+		// Workspace mode: show file nodes at root
+		if (this.workspaceMode) {
+			if (!element) {
+				// Return file nodes at root
+				return Array.from(this.fileNodes.values());
+			}
+			
+			// If element is a file node, return its blocks
+			if (element instanceof FileBlockNode) {
+				const blocks = this.workspaceBlocks.get(element.filePath) || [];
+				return blocks
+					.filter(b => b.depth === 0 && this.shouldShowBlock(b.id))
+					.map(b => {
+						const blockItem = new BlockTreeItem(
+							b.name,
+							b.id,
+							b.parentId,
+							b.depth,
+							b.lineNumber,
+							this.getCollapsibleState(b),
+							b.blockType,
+							b.filePath || ''
+						);
+						if (this.searchQuery && this.matchingBlockIds.has(b.id)) {
+							blockItem.label = `✓ ${b.name}`;
+						}
+						return blockItem;
+					});
+			}
+			
+			// If element is a block, return its children
+			if (element instanceof BlockTreeItem && element.filePath) {
+				const blocks = this.workspaceBlocks.get(element.filePath) || [];
+				return blocks
+					.filter(b => b.parentId === element.blockId && this.shouldShowBlock(b.id))
+					.map(b => {
+						const blockItem = new BlockTreeItem(
+							b.name,
+							b.id,
+							b.parentId,
+							b.depth,
+							b.lineNumber,
+							this.getCollapsibleState(b),
+							b.blockType,
+							b.filePath || ''
+						);
+						if (this.searchQuery && this.matchingBlockIds.has(b.id)) {
+							blockItem.label = `✓ ${b.name}`;
+						}
+						return blockItem;
+					});
+			}
+		}
+		
+		// Editor mode: original behavior (single file)
 		if (!element) {
 			// Return root-level blocks
 			return this.blocks
@@ -216,16 +320,65 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		}
 
 		// Return children of the given element
-		return this.blocks
-			.filter(b => b.parentId === element.blockId && this.shouldShowBlock(b.id))
-			.map(b => this.blockItems.get(b.id)!)
-			.filter(item => item !== undefined);
+		if (element instanceof BlockTreeItem) {
+			return this.blocks
+				.filter(b => b.parentId === element.blockId && this.shouldShowBlock(b.id))
+				.map(b => this.blockItems.get(b.id)!)
+				.filter(item => item !== undefined);
+		}
+		
+		return [];
 	}
 
-	getParent?(element: BlockTreeItem): vscode.ProviderResult<BlockTreeItem> {
-		if (element.parentId === -1) {
+	getParent?(element: BlockTreeItem | FileBlockNode): vscode.ProviderResult<BlockTreeItem | FileBlockNode | undefined> {
+		if (element instanceof FileBlockNode) {
 			return undefined;
 		}
-		return this.blockItems.get(element.parentId);
+		
+		if (this.workspaceMode && element instanceof BlockTreeItem && element.filePath) {
+			if (element.parentId === -1) {
+				// Return the file node as parent for root blocks
+				return this.fileNodes.get(element.filePath);
+			}
+			// Return the parent block
+			const blocks = this.workspaceBlocks.get(element.filePath) || [];
+			const parentBlock = blocks.find(b => b.id === element.parentId);
+			if (parentBlock) {
+				return new BlockTreeItem(
+					parentBlock.name,
+					parentBlock.id,
+					parentBlock.parentId,
+					parentBlock.depth,
+					parentBlock.lineNumber,
+					this.getCollapsibleState(parentBlock),
+					parentBlock.blockType,
+					parentBlock.filePath || ''
+				);
+			}
+		}
+		
+		if (element instanceof BlockTreeItem) {
+			if (element.parentId === -1) {
+				return undefined;
+			}
+			return this.blockItems.get(element.parentId);
+		}
+		
+		return undefined;
+	}
+
+	private getCollapsibleState(block: ParsedBlock): vscode.TreeItemCollapsibleState {
+		const blocks = this.workspaceMode 
+			? (this.workspaceBlocks.get(block.filePath || '') || [])
+			: this.blocks;
+		
+		const hasChildren = blocks.some(b => b.parentId === block.id && this.shouldShowBlock(b.id));
+		if (!hasChildren) {
+			return vscode.TreeItemCollapsibleState.None;
+		}
+		
+		return this.expandedItems.has(block.id)
+			? vscode.TreeItemCollapsibleState.Expanded
+			: vscode.TreeItemCollapsibleState.Collapsed;
 	}
 }

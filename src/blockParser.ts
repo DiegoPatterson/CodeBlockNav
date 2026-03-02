@@ -10,6 +10,7 @@ export interface ParsedBlock {
 	lineNumber: number;
 	parentId: number;
 	blockType: 'BLOCK' | 'SUBBLOCK';
+	filePath?: string; // Optional file path for multi-file support
 }
 
 /**
@@ -22,9 +23,10 @@ export class BlockParser {
 	/**
 	 * Parse blocks from text content
 	 * @param text Full document text
+	 * @param filePath Optional file path for the document
 	 * @returns Array of parsed blocks in hierarchical order
 	 */
-	static parse(text: string): ParsedBlock[] {
+	static parse(text: string, filePath?: string): ParsedBlock[] {
 		const lines = text.split('\n');
 		const blocks: ParsedBlock[] = [];
 		const depthStack: { depth: number; id: number }[] = [];
@@ -56,7 +58,8 @@ export class BlockParser {
 					depth,
 					lineNumber: lineIndex,
 					parentId,
-					blockType
+					blockType,
+					filePath
 				};
 
 				blocks.push(block);

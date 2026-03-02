@@ -30,6 +30,16 @@
           "command": "block-navigator.search",
           "when": "view == block-map-view",
           "group": "navigation"
+        },
+        {
+          "command": "block-navigator.toggleWorkspaceMode",
+          "when": "view == block-map-view",
+          "group": "navigation"
+        },
+        {
+          "command": "block-navigator.toggleEditorMode",
+          "when": "view == block-map-view",
+          "group": "navigation"
         }
       ]
     },
@@ -73,6 +83,16 @@
         "command": "block-navigator.search",
         "title": "Search Blocks",
         "icon": "$(search)"
+      },
+      {
+        "command": "block-navigator.toggleWorkspaceMode",
+        "title": "Switch to Workspace View",
+        "icon": "$(layers)"
+      },
+      {
+        "command": "block-navigator.toggleEditorMode",
+        "title": "Switch to Editor View",
+        "icon": "$(note)"
       }
     ]
   },

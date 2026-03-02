@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { BlockTreeDataProvider, BlockTreeItem } from './treeProvider';
+import { BlockTreeDataProvider, BlockTreeItem, FileBlockNode } from './treeProvider';
 import { BlockDecorator } from './blockDecorator';
 
 let blockMapProvider: BlockTreeDataProvider;
-let treeView: vscode.TreeView<BlockTreeItem>;
+let treeView: vscode.TreeView<BlockTreeItem | FileBlockNode>;
 let blockDecorator: BlockDecorator;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -16,17 +16,21 @@ export function activate(context: vscode.ExtensionContext) {
 	blockMapProvider = new BlockTreeDataProvider();
 	treeView = vscode.window.createTreeView('block-map-view', {
 		treeDataProvider: blockMapProvider
-	});
+	}) as vscode.TreeView<BlockTreeItem | FileBlockNode>;
 
 	// Track which items are expanded by listening to expansion events
 	const expandedBlockIds = new Set<number>();
 	
 	treeView.onDidExpandElement(e => {
-		expandedBlockIds.add(e.element.blockId);
+		if (e.element instanceof BlockTreeItem || (e.element as any).blockId !== undefined) {
+			expandedBlockIds.add((e.element as BlockTreeItem).blockId);
+		}
 	});
 	
 	treeView.onDidCollapseElement(e => {
-		expandedBlockIds.delete(e.element.blockId);
+		if (e.element instanceof BlockTreeItem || (e.element as any).blockId !== undefined) {
+			expandedBlockIds.delete((e.element as BlockTreeItem).blockId);
+		}
 	});
 
 	// Register the reveal command
@@ -36,6 +40,21 @@ export function activate(context: vscode.ExtensionContext) {
 			const position = new vscode.Position(lineNumber, 0);
 			editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
 			editor.selection = new vscode.Selection(position, position);
+		}
+	});
+
+	// Register the open and reveal command (for jumping between files)
+	vscode.commands.registerCommand('block-navigator.openAndRevealLine', async (filePath: string, lineNumber: number) => {
+		try {
+			const uri = vscode.Uri.file(filePath);
+			const document = await vscode.workspace.openTextDocument(uri);
+			const editor = await vscode.window.showTextDocument(document);
+			
+			const position = new vscode.Position(lineNumber, 0);
+			editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+			editor.selection = new vscode.Selection(position, position);
+		} catch (error) {
+			vscode.window.showErrorMessage(`Could not open file: ${filePath}`);
 		}
 	});
 
@@ -104,6 +123,24 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage('Search cleared - showing all blocks');
 			}
 		}
+	});
+
+	// Register workspace mode toggle command
+	vscode.commands.registerCommand('block-navigator.toggleWorkspaceMode', async () => {
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			vscode.window.showWarningMessage('Workspace mode requires an open folder');
+			return;
+		}
+		
+		await blockMapProvider.setWorkspaceMode(true);
+		vscode.window.showInformationMessage('✓ Workspace mode enabled - showing all blocks');
+	});
+
+	// Register editor mode toggle command
+	vscode.commands.registerCommand('block-navigator.toggleEditorMode', async () => {
+		await blockMapProvider.setWorkspaceMode(false);
+		vscode.window.showInformationMessage('✓ Editor mode enabled - showing current file blocks');
 	});
 
 	// Watch for file changes and refresh the tree
