@@ -222,4 +222,5 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 	console.log('CodeBlock Navigator is now deactivated!');
 	blockDecorator.dispose();
+	blockMapProvider.dispose();
 }

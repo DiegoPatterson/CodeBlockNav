@@ -83,17 +83,22 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 	private workspaceMode: boolean = false;
 	private workspaceBlocks: Map<string, ParsedBlock[]> = new Map(); // filePath -> blocks
 	private fileNodes: Map<string, FileBlockNode> = new Map(); // filePath -> FileBlockNode
+	private disposables: vscode.Disposable[] = [];
 
 	constructor() {
 		// Refresh when active editor changes
-		vscode.window.onDidChangeActiveTextEditor(() => this.refresh());
+		this.disposables.push(
+			vscode.window.onDidChangeActiveTextEditor(() => this.refresh())
+		);
 
 		// Refresh when document changes
-		vscode.workspace.onDidChangeTextDocument((e) => {
-			if (e.document === vscode.window.activeTextEditor?.document) {
-				this.refresh();
-			}
-		});
+		this.disposables.push(
+			vscode.workspace.onDidChangeTextDocument((e) => {
+				if (e.document === vscode.window.activeTextEditor?.document) {
+					this.refresh();
+				}
+			})
+		);
 	}
 
 	refresh(): void {
@@ -160,13 +165,28 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		this.matchingBlockIds.clear();
 
 		if (!this.searchQuery) {
+			this.expandedItems.clear(); // Clear expansions when search is cleared
 			return; // No search, show all
 		}
 
+		// Get all blocks to search through (either workspace or editor mode)
+		const blocksToSearch = this.workspaceMode 
+			? Array.from(this.workspaceBlocks.values()).flat()
+			: this.blocks;
+
 		// Find all blocks that match the search query
-		for (const block of this.blocks) {
+		for (const block of blocksToSearch) {
 			if (block.name.toLowerCase().includes(this.searchQuery)) {
 				this.matchingBlockIds.add(block.id);
+				
+				// Auto-expand all ancestors of matching blocks
+				let currentBlock = block;
+				while (currentBlock.parentId !== -1) {
+					this.expandedItems.add(currentBlock.parentId);
+					const parentBlock = blocksToSearch.find(b => b.id === currentBlock.parentId);
+					if (!parentBlock) break;
+					currentBlock = parentBlock;
+				}
 			}
 		}
 	}
@@ -380,5 +400,15 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		return this.expandedItems.has(block.id)
 			? vscode.TreeItemCollapsibleState.Expanded
 			: vscode.TreeItemCollapsibleState.Collapsed;
+	}
+
+	/**
+	 * Dispose of all event listeners
+	 */
+	dispose(): void {
+		for (const disposable of this.disposables) {
+			disposable.dispose();
+		}
+		this.disposables = [];
 	}
 }
