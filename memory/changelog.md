@@ -1,5 +1,15 @@
 # CodeBlock Navigator - Changelog
 
+## [0.1.0] - 2026-03-02 (In Progress)
+
+### Features Added
+- ✅ Search/Filter functionality
+  - New command: `block-navigator.search`
+  - Input box to search blocks by name (case-insensitive)
+  - Smart hierarchy: shows matching blocks and their parents
+  - Match count feedback to user
+  - Clear search by entering empty string
+
 ## [0.0.1] - 2026-03-02
 
 ### Initial Setup
@@ -36,20 +46,20 @@
   - Format: `Found [TYPE] at line [N]: "[NAME]" (ID: [ID], Depth: [D], Parent: [P])`
 
 ### Known Limitations
-- No visual decorations in editor yet (deferred to v0.1)
-- No breadcrumb support (deferred to v0.1)
+- No visual decorations in editor yet (deferred to v0.2)
+- No breadcrumb support (deferred to v0.2)
 - Limited file type support (TS, JS, Python, Java, C#)
 
 ---
 
 ## Future Releases
 
-### v0.1.0 - Editor Decorations
+### v0.2.0 - Visual Enhancements
 - [ ] DecorationRenderOptions for colored comment highlights
 - [ ] Breadcrumb navigation support
-- [ ] Search/filter in sidebar
+- [ ] Collapse/expand all in sidebar
 
-### v0.2.0 - Advanced Features
+### v0.3.0 - Advanced Features
 - [ ] Export block map as outline
 - [ ] Custom comment marker support
 - [ ] Settings configuration

@@ -25,6 +25,33 @@ export function activate(context: vscode.ExtensionContext) {
 		blockMapProvider.refresh();
 	});
 
+	// Register the search command
+	vscode.commands.registerCommand('block-navigator.search', async () => {
+		const currentQuery = blockMapProvider.getSearchQuery();
+		const query = await vscode.window.showInputBox({
+			placeHolder: 'Search blocks by name...',
+			prompt: 'Enter block name to search (or clear to show all)',
+			value: currentQuery,
+			title: 'Search Blocks'
+		});
+
+		if (query !== undefined) {
+			blockMapProvider.setSearchQuery(query);
+			blockMapProvider.refresh();
+			
+			if (query) {
+				const matchCount = blockMapProvider.getMatchCount();
+				if (matchCount > 0) {
+					vscode.window.showInformationMessage(`✓ Found ${matchCount} matching block(s)`);
+				} else {
+					vscode.window.showWarningMessage(`✗ No blocks match "${query}"`);
+				}
+			} else {
+				vscode.window.showInformationMessage('Search cleared - showing all blocks');
+			}
+		}
+	});
+
 	// Watch for file changes and refresh the tree
 	const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,tsx,jsx,py,java,cs}');
 	fileWatcher.onDidChange(() => blockMapProvider.refresh());

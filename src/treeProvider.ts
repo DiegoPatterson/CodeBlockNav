@@ -57,6 +57,8 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 	private blocks: ParsedBlock[] = [];
 	private blockItems: Map<number, BlockTreeItem> = new Map();
+	private searchQuery: string = '';
+	private matchingBlockIds: Set<number> = new Set();
 
 	constructor() {
 		// Refresh when active editor changes
@@ -75,6 +77,65 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		this._onDidChangeTreeData.fire(null);
 	}
 
+	getSearchQuery(): string {
+		return this.searchQuery;
+	}
+
+	setSearchQuery(query: string): void {
+		this.searchQuery = query.toLowerCase();
+		this.updateMatchingBlocks();
+	}
+
+	getMatchCount(): number {
+		return this.matchingBlockIds.size;
+	}
+
+	private updateMatchingBlocks(): void {
+		this.matchingBlockIds.clear();
+
+		if (!this.searchQuery) {
+			return; // No search, show all
+		}
+
+		// Find all blocks that match the search query
+		for (const block of this.blocks) {
+			if (block.name.toLowerCase().includes(this.searchQuery)) {
+				this.matchingBlockIds.add(block.id);
+			}
+		}
+	}
+
+	private shouldShowBlock(blockId: number): boolean {
+		if (!this.searchQuery) {
+			return true; // No search active, show all
+		}
+
+		// If this block matches, show it
+		if (this.matchingBlockIds.has(blockId)) {
+			return true;
+		}
+
+		// If any child matches, show this block (it's an ancestor)
+		for (const block of this.blocks) {
+			if (this.matchingBlockIds.has(block.id) && this.isAncestor(blockId, block.id)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private isAncestor(potentialAncestorId: number, blockId: number): boolean {
+		let current = this.blocks.find(b => b.id === blockId);
+		while (current) {
+			if (current.parentId === potentialAncestorId) {
+				return true;
+			}
+			current = this.blocks.find(b => b.id === current!.parentId);
+		}
+		return false;
+	}
+
 	private loadBlocks(): void {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
@@ -87,6 +148,7 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 		const text = document.getText();
 		this.blocks = BlockParser.parse(text);
 		this.blockItems.clear();
+		this.updateMatchingBlocks();
 
 		// Create tree items from blocks
 		for (const block of this.blocks) {
@@ -104,12 +166,17 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 				block.blockType
 			);
 
+			// Add search indicator
+			if (this.searchQuery && this.matchingBlockIds.has(block.id)) {
+				treeItem.label = `✓ ${block.name}`;
+			}
+
 			this.blockItems.set(block.id, treeItem);
 		}
 	}
 
 	private hasChildren(block: ParsedBlock): boolean {
-		return this.blocks.some(b => b.parentId === block.id);
+		return this.blocks.some(b => b.parentId === block.id && this.shouldShowBlock(b.id));
 	}
 
 	getTreeItem(element: BlockTreeItem): vscode.TreeItem {
@@ -118,16 +185,16 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 	getChildren(element?: BlockTreeItem): vscode.ProviderResult<BlockTreeItem[]> {
 		if (!element) {
-			// Return root-level blocks (depth 0)
+			// Return root-level blocks
 			return this.blocks
-				.filter(b => b.depth === 0)
+				.filter(b => b.depth === 0 && this.shouldShowBlock(b.id))
 				.map(b => this.blockItems.get(b.id)!)
 				.filter(item => item !== undefined);
 		}
 
 		// Return children of the given element
 		return this.blocks
-			.filter(b => b.parentId === element.blockId)
+			.filter(b => b.parentId === element.blockId && this.shouldShowBlock(b.id))
 			.map(b => this.blockItems.get(b.id)!)
 			.filter(item => item !== undefined);
 	}
