@@ -59,6 +59,7 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 	private blockItems: Map<number, BlockTreeItem> = new Map();
 	private searchQuery: string = '';
 	private matchingBlockIds: Set<number> = new Set();
+	private expandedItems: Set<number> = new Set(); // Track which items are expanded
 
 	constructor() {
 		// Refresh when active editor changes
@@ -88,6 +89,24 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 	getMatchCount(): number {
 		return this.matchingBlockIds.size;
+	}
+
+	setExpandAll(expand: boolean): void {
+		if (expand) {
+			// Expand all items with children
+			for (const block of this.blocks) {
+				if (this.hasChildren(block)) {
+					this.expandedItems.add(block.id);
+				}
+			}
+		} else {
+			// Collapse all items
+			this.expandedItems.clear();
+		}
+	}
+
+	getAllVisibleTreeItems(): BlockTreeItem[] {
+		return Array.from(this.blockItems.values());
 	}
 
 	private updateMatchingBlocks(): void {
@@ -152,9 +171,13 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 
 		// Create tree items from blocks
 		for (const block of this.blocks) {
-			const collapsibleState = this.hasChildren(block) 
-				? vscode.TreeItemCollapsibleState.Collapsed 
-				: vscode.TreeItemCollapsibleState.None;
+			// Determine collapsible state based on expandedItems tracking
+			let collapsibleState = vscode.TreeItemCollapsibleState.None;
+			if (this.hasChildren(block)) {
+				collapsibleState = this.expandedItems.has(block.id)
+					? vscode.TreeItemCollapsibleState.Expanded 
+					: vscode.TreeItemCollapsibleState.Collapsed;
+			}
 
 			const treeItem = new BlockTreeItem(
 				block.name,

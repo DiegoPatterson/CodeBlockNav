@@ -17,6 +17,16 @@
     "menus": {
       "view/title": [
         {
+          "command": "block-navigator.expandAll",
+          "when": "view == block-map-view",
+          "group": "navigation"
+        },
+        {
+          "command": "block-navigator.collapseAll",
+          "when": "view == block-map-view",
+          "group": "navigation"
+        },
+        {
           "command": "block-navigator.search",
           "when": "view == block-map-view",
           "group": "navigation"
@@ -48,6 +58,16 @@
       {
         "command": "block-navigator.refresh",
         "title": "Refresh Block Map"
+      },
+      {
+        "command": "block-navigator.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "block-navigator.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)"
       },
       {
         "command": "block-navigator.search",

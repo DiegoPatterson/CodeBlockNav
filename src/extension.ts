@@ -1,14 +1,28 @@
 import * as vscode from 'vscode';
-import { BlockTreeDataProvider } from './treeProvider';
+import { BlockTreeDataProvider, BlockTreeItem } from './treeProvider';
 
 let blockMapProvider: BlockTreeDataProvider;
+let treeView: vscode.TreeView<BlockTreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('CodeBlock Navigator is now active!');
 
-	// Register the tree data provider
+	// Register the tree data provider and create tree view
 	blockMapProvider = new BlockTreeDataProvider();
-	vscode.window.registerTreeDataProvider('block-map-view', blockMapProvider);
+	treeView = vscode.window.createTreeView('block-map-view', {
+		treeDataProvider: blockMapProvider
+	});
+
+	// Track which items are expanded by listening to expansion events
+	const expandedBlockIds = new Set<number>();
+	
+	treeView.onDidExpandElement(e => {
+		expandedBlockIds.add(e.element.blockId);
+	});
+	
+	treeView.onDidCollapseElement(e => {
+		expandedBlockIds.delete(e.element.blockId);
+	});
 
 	// Register the reveal command
 	vscode.commands.registerCommand('block-navigator.revealLine', (lineNumber: number) => {
@@ -23,6 +37,41 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register the refresh command
 	vscode.commands.registerCommand('block-navigator.refresh', () => {
 		blockMapProvider.refresh();
+	});
+
+	// Register expand all command
+	vscode.commands.registerCommand('block-navigator.expandAll', async () => {
+		blockMapProvider.setExpandAll(true);
+		blockMapProvider.refresh();
+		
+		// Wait a bit for the tree to render
+		await new Promise(resolve => setTimeout(resolve, 100));
+		
+		// Expand visible items via reveal API
+		const items = blockMapProvider.getAllVisibleTreeItems();
+		for (const item of items) {
+			if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+				try {
+					await treeView.reveal(item, { expand: true, focus: false, select: false });
+					expandedBlockIds.add(item.blockId);
+					await new Promise(resolve => setTimeout(resolve, 5));
+				} catch (e) {
+					// Ignore reveal errors
+				}
+			}
+		}
+		vscode.window.showInformationMessage('✓ Expanded all blocks');
+	});
+
+	// Register collapse all command
+	vscode.commands.registerCommand('block-navigator.collapseAll', async () => {
+		expandedBlockIds.clear();
+		// Focus the tree
+		await vscode.commands.executeCommand('block-map-view.focus');
+		await new Promise(resolve => setTimeout(resolve, 50));
+		// Use keyboard shortcut for collapse all (works for focused tree)
+		await vscode.commands.executeCommand('list.collapseAll');
+		vscode.window.showInformationMessage('✗ Collapsed all blocks');
 	});
 
 	// Register the search command
