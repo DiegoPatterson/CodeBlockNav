@@ -41,6 +41,13 @@
           "when": "view == block-map-view",
           "group": "navigation"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "block-navigator.copyBlockName",
+          "when": "view == block-map-view",
+          "group": "inline"
+        }
       ]
     },
     "viewsContainers": {
@@ -93,6 +100,10 @@
         "command": "block-navigator.toggleEditorMode",
         "title": "Switch to Editor View",
         "icon": "$(note)"
+      },
+      {
+        "command": "block-navigator.copyBlockName",
+        "title": "Copy"
       }
     ]
   },

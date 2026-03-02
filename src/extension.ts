@@ -165,6 +165,27 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('✓ Editor mode enabled - showing current file blocks');
 	});
 
+	// Register copy block name command
+	vscode.commands.registerCommand('block-navigator.copyBlockName', async (item: BlockTreeItem | FileBlockNode) => {
+		if (item instanceof BlockTreeItem) {
+			// Get the block name with type info
+			const blockName = item.label as string;
+			const typeLabel = item.blockType === 'BLOCK' 
+				? 'BLOCK' 
+				: `SUBBLOCK${item.depth}`;
+			const fullName = `${typeLabel}: ${blockName}`;
+			
+			// Copy to clipboard
+			await vscode.env.clipboard.writeText(fullName);
+			vscode.window.showInformationMessage(`✓ Copied: ${fullName}`);
+		} else if ((item as any).filePath) {
+			// File node - copy the filename
+			const fileName = (item as any).label as string;
+			await vscode.env.clipboard.writeText(fileName);
+			vscode.window.showInformationMessage(`✓ Copied: ${fileName}`);
+		}
+	});
+
 	// Watch for file changes and refresh the tree
 	const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,tsx,jsx,py,java,cs}');
 	fileWatcher.onDidChange(() => {
