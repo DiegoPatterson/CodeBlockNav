@@ -1,6 +1,6 @@
 # CodeBlock Navigator - Changelog
 
-## [0.1.0] - 2026-03-02 (In Progress)
+## [0.1.0] - 2026-03-02
 
 ### Features Added
 - ✅ Search/Filter functionality
@@ -9,6 +9,13 @@
   - Smart hierarchy: shows matching blocks and their parents
   - Match count feedback to user
   - Clear search by entering empty string
+
+- ✅ Expand/Collapse All buttons
+  - New command: `block-navigator.expandAll`
+  - New command: `block-navigator.collapseAll`
+  - Sidebar buttons with icons
+  - Uses native VS Code `list.collapseAll` command for reliability
+  - Tracks expanded state via TreeView events
 
 ## [0.0.1] - 2026-03-02
 
