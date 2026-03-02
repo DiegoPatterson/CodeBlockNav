@@ -17,6 +17,14 @@
   - Uses native VS Code `list.collapseAll` command for reliability
   - Tracks expanded state via TreeView events
 
+- ✅ Visual Decorations for Comments
+  - Subtle color-coded background tints for BLOCK/SUBBLOCK comments in editor
+  - 10 distinct colors that cycle through for unlimited nesting depth
+  - Colors: Blue (BLOCK), Green, Orange, Cyan, Purple, Gold, Rose, Pink, Deep Purple, Teal, Deep Orange
+  - Very subtle (8% opacity) to avoid visual fatigue
+  - Syncs in real-time as you edit files
+  - Overview ruler indicators for easy navigation
+
 ## [0.0.1] - 2026-03-02
 
 ### Initial Setup
