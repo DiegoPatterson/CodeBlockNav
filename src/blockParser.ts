@@ -14,10 +14,11 @@ export interface ParsedBlock {
 }
 
 /**
- * Regex pattern for matching block comments
- * Matches: // BLOCK: [Name] or // SUBBLOCKn: [Name]
+ * Regex pattern for matching block comments across multiple languages
+ * Supports: // (JS/TS/Java/C#/C++/Go/Rust/Dart), # (Python/Ruby/Shell), -- (SQL/Lua/Haskell), <!-- --> (HTML/XML)
+ * Matches: [comment-style] BLOCK: [Name] or [comment-style] SUBBLOCKn: [Name]
  */
-const BLOCK_PATTERN = /\/\/\s*(BLOCK|SUBBLOCK(\d+)):\s*(.+)/g;
+const BLOCK_PATTERN = /(\/\/|#|--|<!--)\s*(BLOCK|SUBBLOCK(\d+)):\s*(.+?)(?:\s*-->)?$/gm;
 
 export class BlockParser {
 	/**
@@ -80,9 +81,10 @@ export class BlockParser {
 		BLOCK_PATTERN.lastIndex = 0;
 
 		while ((match = BLOCK_PATTERN.exec(line)) !== null) {
-			const blockTypeStr = match[1];
-			const subblockDepthStr = match[2];
-			const name = match[3].trim();
+			// match[1] = comment style (// or # or -- or <!--)
+			const blockTypeStr = match[2];
+			const subblockDepthStr = match[3];
+			const name = match[4].trim();
 
 			if (blockTypeStr === 'BLOCK') {
 				matches.push({

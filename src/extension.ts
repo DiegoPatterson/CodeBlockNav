@@ -24,17 +24,39 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.languages.registerDocumentSymbolProvider(
 			[
-				// TypeScript/JavaScript
+				// TypeScript/JavaScript (// comments)
 				{ scheme: 'file', language: 'typescript' },
 				{ scheme: 'file', language: 'javascript' },
 				{ scheme: 'file', language: 'typescriptreact' },
 				{ scheme: 'file', language: 'javascriptreact' },
-				// Python
-				{ scheme: 'file', language: 'python' },
-				// Java
+				// Java/C#/C++ (// comments)
 				{ scheme: 'file', language: 'java' },
-				// C#
-				{ scheme: 'file', language: 'csharp' }
+				{ scheme: 'file', language: 'csharp' },
+				{ scheme: 'file', language: 'c' },
+				{ scheme: 'file', language: 'cpp' },
+				// Modern languages (// comments)
+				{ scheme: 'file', language: 'dart' },
+				{ scheme: 'file', language: 'go' },
+				{ scheme: 'file', language: 'rust' },
+				{ scheme: 'file', language: 'swift' },
+				{ scheme: 'file', language: 'kotlin' },
+				// Scripting languages (# comments)
+				{ scheme: 'file', language: 'python' },
+				{ scheme: 'file', language: 'ruby' },
+				{ scheme: 'file', language: 'shellscript' },
+				{ scheme: 'file', language: 'perl' },
+				{ scheme: 'file', language: 'r' },
+				{ scheme: 'file', language: 'yaml' },
+				{ scheme: 'file', language: 'toml' },
+				// SQL/Database (-- comments)
+				{ scheme: 'file', language: 'sql' },
+				{ scheme: 'file', language: 'plsql' },
+				{ scheme: 'file', language: 'lua' },
+				{ scheme: 'file', language: 'haskell' },
+				// Markup (<!-- --> comments)
+				{ scheme: 'file', language: 'html' },
+				{ scheme: 'file', language: 'xml' },
+				{ scheme: 'file', language: 'markdown' }
 			],
 			blockSymbolProvider
 		)
@@ -187,7 +209,9 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	// Watch for file changes and refresh the tree
-	const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,tsx,jsx,py,java,cs}');
+	const fileWatcher = vscode.workspace.createFileSystemWatcher(
+		'**/*.{ts,js,tsx,jsx,py,java,cs,c,cpp,dart,go,rs,swift,kt,kts,rb,sh,bash,zsh,pl,r,yaml,yml,toml,sql,psql,mysql,lua,hs,html,htm,xhtml,xml,md}'
+	);
 	fileWatcher.onDidChange(() => {
 		blockMapProvider.refresh();
 		if (vscode.window.activeTextEditor) {

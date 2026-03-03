@@ -78,15 +78,15 @@ export class BlockDecorator {
 		// Find decoration ranges for each block
 		for (const block of blocks) {
 			const line = editor.document.lineAt(block.lineNumber);
-			const text = line.text;
+			const lineText = line.text;
 
-			// Find the BLOCK or SUBBLOCKn pattern in the line
-			const blockPattern = /\/\/\s*(BLOCK|SUBBLOCK(\d+)):\s*(.+)/;
-			const match = text.match(blockPattern);
+			// Find the BLOCK or SUBBLOCKn pattern in the line across comment styles
+			const blockPattern = /(\/\/|#|--|<!--)\s*(BLOCK|SUBBLOCK(\d+)):\s*(.+?)(?:\s*-->)?$/;
+			const match = lineText.match(blockPattern);
 
 			if (match) {
 				const fullMatch = match[0];
-				const startChar = text.indexOf(fullMatch);
+				const startChar = lineText.indexOf(fullMatch);
 				const endChar = startChar + fullMatch.length;
 
 				const range = new vscode.Range(

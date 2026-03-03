@@ -14,7 +14,9 @@ export class WorkspaceBlockScanner {
 		const blocksByFile = new Map<string, ParsedBlock[]>();
 		
 		// File patterns to search
-		const patterns = ['**/*.{ts,js,tsx,jsx,py,java,cs}'];
+		const patterns = [
+			'**/*.{ts,js,tsx,jsx,py,java,cs,c,cpp,dart,go,rs,swift,kt,kts,rb,sh,bash,zsh,pl,r,yaml,yml,toml,sql,psql,mysql,lua,hs,html,htm,xhtml,xml,md}'
+		];
 		
 		try {
 			for (const pattern of patterns) {

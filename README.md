@@ -12,7 +12,11 @@ CodeBlock Navigator helps developers navigate complex codebases by creating an i
 ✅ **Click-to-Jump Navigation** - Single click jumps to any code block
 ✅ **Real-time Updates** - Sidebar refreshes as you edit
 ✅ **Color-Coded Blocks** - Different colors for different nesting levels
-✅ **Multi-Language Support** - Works with TypeScript, JavaScript, Python, Java, and C#
+✅ **Multi-Language Support** - Works with 30+ languages including:
+  - `//` style: JavaScript, TypeScript, Java, C#, C++, Go, Rust, Dart, Swift, Kotlin
+  - `#` style: Python, Ruby, Shell scripts, Perl, R, YAML
+  - `--` style: SQL, Lua, Haskell
+  - `<!-- -->` style: HTML, XML, Markdown
 
 ## Syntax
 
@@ -26,6 +30,32 @@ CodeBlock Navigator helps developers navigate complex codebases by creating an i
 // SUBBLOCK1: Login Handler
 // SUBBLOCK2: Validate Credentials
 // SUBBLOCK3: Token Generation
+```
+
+### Language-Specific Comment Styles
+
+**JavaScript/TypeScript/Java/C#/C++/Go/Rust/Dart:**
+```typescript
+// BLOCK: Main Section
+// SUBBLOCK1: Subsection
+```
+
+**Python/Ruby/Shell:**
+```python
+# BLOCK: Main Section
+# SUBBLOCK1: Subsection
+```
+
+**SQL/Lua/Haskell:**
+```sql
+-- BLOCK: Main Section
+-- SUBBLOCK1: Subsection
+```
+
+**HTML/XML:**
+```html
+<!-- BLOCK: Main Section -->
+<!-- SUBBLOCK1: Subsection -->
 ```
 
 ## Example

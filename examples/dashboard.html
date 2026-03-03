@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- BLOCK: Dashboard Page -->
+
+<head>
+    <!-- SUBBLOCK1: Meta Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    
+    <!-- SUBBLOCK1: Stylesheets -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+
+<body>
+    <!-- SUBBLOCK1: Navigation Header -->
+    
+    <header class="navbar">
+        <!-- SUBBLOCK2: Logo and Brand -->
+        <div class="brand">
+            <img src="logo.png" alt="Logo">
+            <h1>Dashboard</h1>
+        </div>
+        
+        <!-- SUBBLOCK2: Navigation Menu -->
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#analytics">Analytics</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+        </nav>
+        
+        <!-- SUBBLOCK2: User Profile -->
+        <div class="user-menu">
+            <img src="avatar.png" alt="User">
+            <span>John Doe</span>
+        </div>
+    </header>
+
+    <!-- SUBBLOCK1: Main Content Area -->
+    
+    <main class="container">
+        <!-- SUBBLOCK2: Statistics Cards -->
+        
+        <section class="stats-grid">
+            <!-- SUBBLOCK3: Revenue Card -->
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <p class="stat-value">$45,230</p>
+                <span class="stat-change positive">+12.5%</span>
+            </div>
+            
+            <!-- SUBBLOCK3: Users Card -->
+            <div class="stat-card">
+                <h3>Active Users</h3>
+                <p class="stat-value">1,234</p>
+                <span class="stat-change positive">+8.2%</span>
+            </div>
+            
+            <!-- SUBBLOCK3: Orders Card -->
+            <div class="stat-card">
+                <h3>Orders</h3>
+                <p class="stat-value">567</p>
+                <span class="stat-change negative">-3.1%</span>
+            </div>
+        </section>
+
+        <!-- SUBBLOCK2: Data Table -->
+        
+        <section class="recent-orders">
+            <h2>Recent Orders</h2>
+            
+            <!-- SUBBLOCK3: Table Structure -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#12345</td>
+                        <td>Alice Smith</td>
+                        <td>$125.00</td>
+                        <td><span class="badge success">Completed</span></td>
+                    </tr>
+                    <tr>
+                        <td>#12346</td>
+                        <td>Bob Johnson</td>
+                        <td>$89.99</td>
+                        <td><span class="badge pending">Pending</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- SUBBLOCK1: Footer Section -->
+    
+    <footer>
+        <!-- SUBBLOCK2: Copyright Info -->
+        <p>&copy; 2026 Your Company. All rights reserved.</p>
+        
+        <!-- SUBBLOCK2: Footer Links -->
+        <nav class="footer-nav">
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </footer>
+
+    <!-- SUBBLOCK1: Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
