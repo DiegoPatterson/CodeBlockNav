@@ -3,6 +3,11 @@
   "displayName": "CodeBlock Navigator",
   "description": "Parse hierarchical comment syntax to build a nested code map in the sidebar",
   "version": "0.0.1",
+  "publisher": "local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DiegoPatterson/CodeBlockNav"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
