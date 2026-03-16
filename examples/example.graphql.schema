@@ -1,0 +1,54 @@
+# BLOCK: Advanced GraphQL Directive Definitions
+# Shows how the parser handles GraphQL schema definition files
+# Often used in GraphQL-based systems with custom directives
+
+# SUBBLOCK1: Custom Directives
+directive @auth(role: String!) on FIELD_DEFINITION
+directive @cache(ttl: Int!) on FIELD_DEFINITION
+directive @deprecated(reason: String!) on ENUM_VALUE | FIELD_DEFINITION
+
+# SUBBLOCK1: Scalar Type Extensions
+scalar DateTime
+scalar JSON
+scalar BigInt
+
+# SUBBLOCK1: Enum Types
+enum UserRole {
+  ADMIN
+  MODERATOR
+  USER
+  GUEST
+}
+
+# SUBBLOCK1: Interface Definitions
+# SUBBLOCK2: Node Interface
+interface Node {
+  id: ID!
+}
+
+# SUBBLOCK2: Timestamped Interface
+interface Timestamped {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# SUBBLOCK1: Input Types for Mutations
+# SUBBLOCK2: Filter Inputs
+input UserFilter {
+  role: UserRole
+  createdAfter: DateTime
+  searchTerm: String
+}
+
+# SUBBLOCK2: Pagination
+input PaginationInput {
+  limit: Int!
+  offset: Int!
+}
+
+# SUBBLOCK1: Complex Type Example
+type SearchResult {
+  users: [User!]!
+  posts: [Post!]!
+  comments: [Comment!]!
+}

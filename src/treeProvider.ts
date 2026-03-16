@@ -150,14 +150,21 @@ export class BlockTreeDataProvider implements vscode.TreeDataProvider<BlockTreeI
 	}
 
 	private async loadWorkspaceBlocks(): Promise<void> {
-		const { WorkspaceBlockScanner } = await import('./workspaceBlockScanner');
-		this.workspaceBlocks = await WorkspaceBlockScanner.scanWorkspace();
-		
-		// Create file nodes
-		this.fileNodes.clear();
-		for (const [filePath, blocks] of this.workspaceBlocks) {
-			const relativeLabel = WorkspaceBlockScanner.getRelativePath(filePath);
-			this.fileNodes.set(filePath, new FileBlockNode(filePath, relativeLabel, blocks.length));
+		try {
+			const { WorkspaceBlockScanner } = await import('./workspaceBlockScanner');
+			this.workspaceBlocks = await WorkspaceBlockScanner.scanWorkspace();
+			
+			// Create file nodes
+			this.fileNodes.clear();
+			for (const [filePath, blocks] of this.workspaceBlocks) {
+				const relativeLabel = WorkspaceBlockScanner.getRelativePath(filePath);
+				this.fileNodes.set(filePath, new FileBlockNode(filePath, relativeLabel, blocks.length));
+			}
+		} catch (error) {
+			console.error('Error loading workspace blocks:', error);
+			vscode.window.showErrorMessage(`Failed to scan workspace blocks: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			this.workspaceBlocks.clear();
+			this.fileNodes.clear();
 		}
 	}
 

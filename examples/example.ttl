@@ -1,0 +1,34 @@
+# BLOCK: RDF Turtle Example
+# This is a Turtle (RDF) file demonstrating BLOCK comments in semantic web ontology
+# Turtle uses # for comments, making it compatible with the block parser
+
+@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# SUBBLOCK1: Classes Definition
+ex:Person a rdfs:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A person in our ontology" .
+
+# SUBBLOCK1: Properties
+ex:name a rdf:Property ;
+    rdfs:domain ex:Person ;
+    rdfs:range rdfs:Literal .
+
+ex:age a rdf:Property ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:integer .
+
+# SUBBLOCK1: Individual Instances
+ex:john a ex:Person ;
+    ex:name "John Doe" ;
+    ex:age 30 .
+
+ex:jane a ex:Person ;
+    ex:name "Jane Smith" ;
+    ex:age 28 .
+
+# SUBBLOCK2: Relationships
+ex:john ex:knows ex:jane .
+ex:jane ex:knows ex:john .

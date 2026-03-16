@@ -1,0 +1,56 @@
+# BLOCK: GraphQL Schema Definition
+# GraphQL schema with BLOCK and SUBBLOCK comments
+# Demonstrates the extension working with modern API schema files
+
+# SUBBLOCK1: User Type Definition
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  
+  # SUBBLOCK2: User Relationships
+  posts: [Post!]!
+  friends: [User!]!
+  profile: UserProfile
+}
+
+# SUBBLOCK1: Post Type Definition  
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  
+  # SUBBLOCK2: Post Metadata
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  comments: [Comment!]!
+}
+
+# SUBBLOCK1: Comment Type
+type Comment {
+  id: ID!
+  text: String!
+  author: User!
+  post: Post!
+  createdAt: DateTime!
+}
+
+# SUBBLOCK1: User Profile Extension
+type UserProfile {
+  bio: String
+  avatar: String
+  location: String
+  joinedAt: DateTime!
+}
+
+# SUBBLOCK1: Query Root
+type Query {
+  # SUBBLOCK2: User Queries
+  user(id: ID!): User
+  users(limit: Int, offset: Int): [User!]!
+  
+  # SUBBLOCK2: Post Queries
+  post(id: ID!): Post
+  posts(authorId: ID!): [Post!]!
+}

@@ -7,44 +7,89 @@ import * as path from 'path';
  */
 export class WorkspaceBlockScanner {
 	/**
-	 * Scan all relevant files in the workspace for blocks
+	 * Scan all files in the workspace for blocks
+	 * This approach scans all file types and lets the BlockParser detect supported comment styles
+	 * Supports: // (JS/TS/Java/etc), # (Python/Ruby/TTL/etc), -- (SQL/Lua/etc), <!-- --> (HTML/XML/etc)
 	 * @returns Map of file paths to their parsed blocks
 	 */
 	static async scanWorkspace(): Promise<Map<string, ParsedBlock[]>> {
 		const blocksByFile = new Map<string, ParsedBlock[]>();
 		
-		// File patterns to search
-		const patterns = [
-			'**/*.{ts,js,tsx,jsx,py,java,cs,c,cpp,dart,go,rs,swift,kt,kts,rb,sh,bash,zsh,pl,r,yaml,yml,toml,sql,psql,mysql,lua,hs,html,htm,xhtml,xml,md}'
-		];
+		let filesScanned = 0;
+		let filesWithBlocks = 0;
+		let filesSkipped = 0;
 		
 		try {
-			for (const pattern of patterns) {
-				const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**', 500);
-				
-				for (const fileUri of files) {
+			// Find all files (excluding common non-source directories)
+			// This approach works with ANY file type that contains supported comment styles
+			const files = await vscode.workspace.findFiles(
+				'**/*',  // Match all files
+				'**/node_modules/**|**/.git/**|**/.vscode/**|**/dist/**|**/build/**|**/.angular/**|**/coverage/**',
+				1000  // Increased limit to scan more files
+			);
+			
+			for (const fileUri of files) {
+				filesScanned++;
+				try {
+					let document: vscode.TextDocument;
 					try {
-						const document = await vscode.workspace.openTextDocument(fileUri);
-						const text = document.getText();
-						const filePath = document.uri.fsPath;
-						
-						const blocks = BlockParser.parse(text, filePath);
-						
-						// Only add files that have blocks
-						if (blocks.length > 0) {
-							blocksByFile.set(filePath, blocks);
-						}
-					} catch (error) {
-						// Skip files that can't be read
-						console.log(`Could not read file: ${fileUri.fsPath}`);
+						document = await vscode.workspace.openTextDocument(fileUri);
+					} catch (openError) {
+						filesSkipped++;
+						continue;
 					}
+					
+					let text: string;
+					try {
+						text = document.getText();
+					} catch (textError) {
+						filesSkipped++;
+						continue;
+					}
+					
+					// Skip binary files (rough heuristic: check if document is likely text)
+					if (text.length === 0 || !this.looksLikeTextFile(text)) {
+						filesSkipped++;
+						continue;
+					}
+					
+					const filePath = document.uri.fsPath;
+					
+					let blocks: ParsedBlock[];
+					try {
+						blocks = BlockParser.parse(text, filePath);
+					} catch (parseError) {
+						filesSkipped++;
+						continue;
+					}
+					
+					// Only add files that have blocks (any supported comment style)
+					if (blocks.length > 0) {
+						blocksByFile.set(filePath, blocks);
+						filesWithBlocks++;
+					}
+				} catch (error) {
+					// Unexpected error - log it but continue scanning
+					console.error(`Unexpected error processing file ${fileUri.fsPath}:`, error);
+					filesSkipped++;
 				}
 			}
+			console.log(`Workspace scan completed: ${filesScanned} files scanned, ${filesWithBlocks} files with blocks, ${filesSkipped} files skipped`);
 		} catch (error) {
-			console.error('Error scanning workspace:', error);
+			console.error('Critical error during workspace scan:', error);
+			vscode.window.showErrorMessage(`Error scanning workspace for blocks: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
 		
 		return blocksByFile;
+	}
+
+	/**
+	 * Simple heuristic to detect if content looks like text (not binary)
+	 * Checks for presence of null bytes which indicate binary files
+	 */
+	private static looksLikeTextFile(text: string): boolean {
+		// Check for null bytes which indicate binary files
+		return !text.includes('\0');
 	}
 
 	/**

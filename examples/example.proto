@@ -1,0 +1,54 @@
+// BLOCK: Protocol Buffers Definition
+// Example protobuf file demonstrating BLOCK parsing in .proto format
+// Used for efficient data serialization and RPC service definitions
+
+syntax = "proto3";
+
+package example.v1;
+
+// SUBBLOCK1: User Message Definition
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  
+  // SUBBLOCK2: User Profile Information
+  string bio = 4;
+  string avatar_url = 5;
+  
+  // SUBBLOCK2: Timestamps
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+// SUBBLOCK1: Post Message Definition
+message Post {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string content = 4;
+  
+  // SUBBLOCK2: Post Metadata
+  repeated string tags = 5;
+  int32 view_count = 6;
+  
+  // SUBBLOCK2: Timestamps
+  int64 created_at = 7;
+  int64 published_at = 8;
+}
+
+// SUBBLOCK1: CreateUserRequest
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+// SUBBLOCK1: UserService Definition
+service UserService {
+  // SUBBLOCK2: RPC Methods
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc DeleteUser(DeleteUserRequest) returns (Empty);
+}
