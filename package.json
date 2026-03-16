@@ -2,7 +2,7 @@
   "name": "codeblock-navigator",
   "displayName": "CodeBlock Navigator",
   "description": "Parse hierarchical comment syntax to build a nested code map in the sidebar",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "local",
   "repository": {
     "type": "git",
